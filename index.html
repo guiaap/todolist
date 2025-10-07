@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tarefas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="error-message"></div>
+
+    <main id="container">
+
+        <h1>Lista de Tarefas</h1>
+
+        <div id="task-input-container">
+
+            <input type="text" id="task-input" placeholder="Inclua uma tarefa" autofocus>
+
+            <button id="task-add-button">
+                <img id="task-add-icon" src="images/add-icon.png" alt="">
+            </button>
+        </div>
+
+        <div id="active-task-container" class="task-container">
+
+            <h2>Tarefas Ativas</h2>
+
+            <ul id="active-task-list" class="task-list">
+
+            </ul>
+
+        </div>
+
+        <div id="concluded-task-container" class="task-container">
+
+            <h2>Tarefas Concluídas</h2>
+
+            <ul id="concluded-task-list" class="task-list">
+
+                
+            </ul>
+
+        </div>
+   
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
