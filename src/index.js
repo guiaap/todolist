@@ -5,20 +5,32 @@ class Task {
         this.nameNormalized = nameNormalized
         this.isConcluded = isConcluded
     }
-
 }
-
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
 function normalizeText(text) {
-    return text
-        .normalize("NFD")                   
-        .replace(/[\u0300-\u036f]/g, "")    
-        .trim()                             
-        .toUpperCase();                     
+    return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase();                     
 }
 
-function createItem(taskName) {
+function setLocalStorage(tasks) {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function getLocalStorage() {
+    return JSON.parse(localStorage.getItem("tasks")) || [];
+}
+
+function showErrorMessage(text, time) {
+
+    let errorMessage = document.getElementById("error-message");
+    errorMessage.textContent = text;
+    errorMessage.style.opacity = 1;
+
+    setTimeout(() => {
+        errorMessage.style.opacity = 0; 
+    }, time);
+}
+
+function taskFactory(taskName) {
 
     const taskItem = document.createElement("li");
     taskItem.classList.add("task-item");
@@ -38,7 +50,7 @@ function createItem(taskName) {
     taskEditButton.classList.add("task-button");
 
     const editIcon = document.createElement("img");
-    editIcon.setAttribute("src", "images/edit-icon.png");
+    editIcon.setAttribute("src", "src/images/edit-icon.png");
     editIcon.classList.add("task-button-icon");
     taskEditButton.appendChild(editIcon);
 
@@ -47,7 +59,7 @@ function createItem(taskName) {
     taskRemoveButton.classList.add("task-button");
 
     const removeIcon = document.createElement("img");
-    removeIcon.setAttribute("src", "images/remove-icon.png");
+    removeIcon.setAttribute("src", "src/images/remove-icon.png");
     removeIcon.classList.add("task-button-icon");
     taskRemoveButton.appendChild(removeIcon);
 
@@ -56,7 +68,7 @@ function createItem(taskName) {
     taskConcludeButton.classList.add("task-button");
 
     const concludeIcon = document.createElement("img");
-    concludeIcon.setAttribute("src", "images/conclude-icon.png");
+    concludeIcon.setAttribute("src", "src/images/conclude-icon.png");
     concludeIcon.classList.add("task-button-icon");
     taskConcludeButton.appendChild(concludeIcon);
 
@@ -71,25 +83,6 @@ function createItem(taskName) {
     taskItem.appendChild(taskButtonsContainer);
     
     return taskItem;
-}
-
-function loadTasks() {
-
-    let tasksSaved = JSON.parse(localStorage.getItem("tasks"));
-
-    for(let t of tasksSaved) {
-
-        const taskItem = createItem(t.name);
-
-        if(t.isConcluded === false) {
-            const activeTaskList = document.getElementById("active-task-list");
-            activeTaskList.appendChild(taskItem);
-        }
-        else {
-            const concludedTaskList = document.getElementById("concluded-task-list");
-            concludedTaskList.appendChild(taskItem);   
-        }
-    }
 }
 
 function showTasksContainer() {
@@ -117,22 +110,28 @@ function showTasksContainer() {
     }
 }
 
-if(tasks.length > 0) {
-    loadTasks();
+let tasks = getLocalStorage();
+
+function loadTasks() {
+
+    for(let t of tasks) {
+
+        const taskItem = taskFactory(t.name);
+
+        if(t.isConcluded === false) {
+            const activeTaskList = document.getElementById("active-task-list");
+            activeTaskList.appendChild(taskItem);
+        }
+        else {
+            const concludedTaskList = document.getElementById("concluded-task-list");
+            concludedTaskList.appendChild(taskItem);   
+        }
+    }
 }
+
+if(tasks.length > 0) loadTasks();
 
 showTasksContainer();
-
-function showErrorMessage(text, time) {
-
-    let errorMessage = document.getElementById("error-message");
-    errorMessage.textContent = text;
-    errorMessage.style.opacity = 1;
-
-    setTimeout(() => {
-        errorMessage.style.opacity = 0; 
-    }, time);
-}
 
 function verifyTask(taskName, taskNameNormalized) {
 
@@ -152,9 +151,6 @@ function verifyTask(taskName, taskNameNormalized) {
     return true;
 }
 
-const taskInput = document.getElementById("task-input");
-const taskInputMessage = document.getElementById("task-input-message");
-
 function createTask() {
 
     let taskName = taskInput.value;
@@ -166,18 +162,20 @@ function createTask() {
         let task = new Task(taskName, taskNameNormalized);
         tasks.push(task);
 
-        const taskItem = createItem(taskName);        
+        const taskItem = taskFactory(taskName);        
 
         const activeTaskList = document.getElementById("active-task-list");
         activeTaskList.appendChild(taskItem);
 
-        localStorage.setItem("tasks", JSON.stringify(tasks));    
+        setLocalStorage(tasks);  
         
         taskInput.value = '';
 
         showTasksContainer();
     }
 }
+
+const taskInput = document.getElementById("task-input");
 
 taskInput.addEventListener('keydown', (e) => {
     
@@ -186,11 +184,6 @@ taskInput.addEventListener('keydown', (e) => {
     if(keyPressed === 'Enter') {
         createTask();
     }
-
-    if(keyPressed === 'ArrowDown') {
-        localStorage.clear();
-        location.reload(true);
-    }
 });
 
 const taskAddButton = document.getElementById('task-add-button');
@@ -198,38 +191,6 @@ const taskAddButton = document.getElementById('task-add-button');
 taskAddButton.addEventListener('click', () => {
     createTask();
 });
-
-function concludeTask(concludeButton) {
-
-    const taskItem = concludeButton.closest("li");
-    const concludedTaskList = document.getElementById("concluded-task-list");
-
-    concludedTaskList.appendChild(taskItem);
-    taskItem.querySelector(".task-conclude-button").style.display = "none";
-
-    showTasksContainer();
-}
-
-function removeTask(removeButton) {
-
-    const taskItem = removeButton.closest('li');
-    const taskEditInput = taskItem.querySelector("input");
-    let taskName = taskEditInput.value;
-    let taskNameNormalized = normalizeText(taskName);
-    
-    for(let t of tasks) {
-
-        if(t.nameNormalized === taskNameNormalized) {
-            tasks = tasks.filter(t => t.nameNormalized !== taskNameNormalized);
-        }
-    }
-
-    taskItem.remove();
-
-    localStorage.setItem("tasks", JSON.stringify(tasks)); 
-
-    showTasksContainer();
-}
 
 function editTask(editButton) {
 
@@ -260,7 +221,8 @@ function editTask(editButton) {
                 }
             }
 
-            localStorage.setItem("tasks", JSON.stringify(tasks));;               
+            setLocalStorage(tasks);
+
         } else {
             taskEditInput.value = taskName;
         }
@@ -284,6 +246,42 @@ function editTask(editButton) {
 
     document.addEventListener('click', handleOutsideClick);
 }
+
+function concludeTask(concludeButton) {
+
+    const taskItem = concludeButton.closest("li");
+    const concludedTaskList = document.getElementById("concluded-task-list");
+
+    concludedTaskList.appendChild(taskItem);
+    taskItem.querySelector(".task-conclude-button").style.display = "none";
+
+    showTasksContainer();
+}
+
+function removeTask(removeButton) {
+
+    const taskItem = removeButton.closest('li');
+    const taskEditInput = taskItem.querySelector("input");
+    let taskName = taskEditInput.value;
+    let taskNameNormalized = normalizeText(taskName);
+    
+    for(let t of tasks) {
+
+        if(t.nameNormalized === taskNameNormalized) {
+            tasks = tasks.filter(t => t.nameNormalized !== taskNameNormalized);
+        }
+    }
+
+    taskItem.remove();
+
+    setLocalStorage(tasks); 
+
+    showTasksContainer();
+}
+
+
+
+
 
 
 
